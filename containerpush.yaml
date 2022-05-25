@@ -1,0 +1,41 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  annotations:
+    batch.kubernetes.io/job-tracking: ""
+  labels:
+    job-name: largeskopeo
+  name: largeskopeo
+spec:
+  backoffLimit: 2
+  completionMode: NonIndexed
+  completions: 1
+  parallelism: 1
+  suspend: false
+  template:
+    metadata:
+      labels:
+        job-name: largeskopeo
+    spec:
+      containers:
+      - env:
+        - name: http_proxy
+          value: <your corporate proxy>
+        - name: https_proxy
+          value: <your corporate proxy>
+        args:
+         - skopeo copy docker://docker.io/slightlytyler/large-image-test:latest docker://<jfrog-repo url>--container-repo.jfrog.io/skopeo-largejob/slightlytyler/fourgb:latest --dest-username vas-bot-admin --dest-password "<your api key for jfrog repo>"
+        command:
+         - /bin/sh
+         - -c
+        image: quay.io/skopeo/stable
+        imagePullPolicy: IfNotPresent
+        name: largeskopeo
+        resources: {}
+        securityContext:
+          privileged: true
+      dnsPolicy: ClusterFirst
+      restartPolicy: Never
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
