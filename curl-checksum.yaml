@@ -1,0 +1,44 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  annotations:
+    batch.kubernetes.io/job-tracking: ""
+  labels:
+    job-name: checksumed
+  name: checksumed
+spec:
+  backoffLimit: 2
+  completionMode: NonIndexed
+  completions: 1
+  parallelism: 1
+  suspend: false
+  template:
+    metadata:
+      labels:
+        job-name: checksumed
+    spec:
+      containers:
+      - env:
+        - name: http_proxy
+          value: <your corporate proxy>
+        - name: https_proxy
+          value: <your corporate proxy>
+        args:
+         - echo $CHECKSUM;
+           CHECKSUM=`curl -L https://downloads.bitnami.com/files/stacks/jenkins/2.332.2-0/bitnami-jenkins-2.332.2-0-linux-debian-10-x86_64-nami.ova |shasum -a 1 | awk '{ print $1 }'`;
+           curl https://downloads.bitnami.com/files/stacks/jenkins/2.332.2-0/bitnami-jenkins-2.332.2-0-linux-debian-10-x86_64-nami.ova  | curl -H "X-JFrog-Art-Api:<myAPIkey>"  -H "X-Checksum-Sha1:${CHECKSUM}" -T - "https://<jfrogrepo url>/artifactory/vas--vmaas-repo/withoutdownload/checksum/ova/v1/jenkins.ova";
+        command:
+         - /bin/sh
+         - -c
+        image: skopeo:v2
+        imagePullPolicy: IfNotPresent
+        name: checksumed
+        resources: {}
+        securityContext:
+          privileged: true
+      dnsPolicy: ClusterFirst
+      restartPolicy: Never
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      
