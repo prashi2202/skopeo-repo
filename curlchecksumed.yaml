@@ -1,0 +1,41 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  annotations:
+    batch.kubernetes.io/job-tracking: ""
+  labels:
+    job-name: jenkinsupload
+  name: jenkinsupload
+spec:
+  backoffLimit: 2
+  completionMode: NonIndexed
+  completions: 1
+  parallelism: 1
+  suspend: false
+  template:
+    metadata:
+      labels:
+        job-name: jenkinsupload
+    spec:
+      containers:
+      - env:
+        - name: http_proxy
+          value: <corporate proxy>
+        - name: https_proxy
+          value: <corporate proxy>
+        args:
+         - curl https://downloads.bitnami.com/files/stacks/jenkins/2.332.2-0/bitnami-jenkins-2.332.2-0-linux-debian-10-x86_64-nami.ova  | curl -H "X-JFrog-Art-Api:<myapi>" -H "X-Checksum-Sha1:86215e6c8b43417672efc77bc5b7ee0a739d3c2f" -T - "https://hcss.jfrog.io/artifactory/vas--vmaas-repo/pepsi/jenkins/ova/v1/jenkinsv1.ova"
+        command:
+         - /bin/sh
+         - -c
+        image: quay.io/skopeo/stable
+        imagePullPolicy: IfNotPresent
+        name: jenkinsupload
+        resources: {}
+        securityContext:
+          privileged: true
+      dnsPolicy: ClusterFirst
+      restartPolicy: Never
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
